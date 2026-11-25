@@ -23,6 +23,7 @@
 - **配额**：内存上限、磁盘余量——空间紧张时智能体写记忆会静默失败
 - **出口网络**（可选 `--net`）：pypi / github / huggingface / npm / openai 通不通
 - **跨重启探针**（`--plant` / `--check`）：播种随机标记，重启后实测哪些目录真的能活
+- **前后对比**（`--compare 旧报告.json`）：按稳定发现项 ID 对比两次体检——新增 / 已解决 / 持续
 
 ## 快速开始（2 步）
 
@@ -42,7 +43,28 @@
 python memory_persistence_diag.py --net      # 附带出口网络检测
 python memory_persistence_diag.py --plant    # 重启前播种探针标记
 python memory_persistence_diag.py --check    # 重启后收获，实测各目录存活情况
+python memory_persistence_diag.py --compare memory_diag_reports/memory_persistence_report.json
+                                             # 修复后复跑对比：新增 / 已解决 / 持续
 ```
+
+## 修复验收：发现项 ID 与前后对比
+
+每条发现带稳定 ID（如 `HOME-EPHEMERAL`、`CWD-EPHEMERAL`、`MEMDIR-VOLATILE:<路径>`、
+`DISK-LOW`），并标注自修工时估计（人时）。修复后复跑并加
+`--compare 上次报告.json`，报告会列出：
+
+- ✅ **已解决**——上次有、这次没了的发现项
+- 🆕 **新增**——这次才出现的发现项
+- 🔁 **严重程度变化**——同一问题变好或变差
+- 其余为**持续存在**，按建议继续处理
+
+用「高危 N→0」作为修复验收标准，而不是凭感觉说"应该修好了"。
+
+## 探针的容灾设计
+
+`--plant` 除了在报告目录写播种记录，还会把注册表快照同步写进每个播种目录
+（隐藏文件 `.memory_probe_registry.json`）。即使报告目录随沙箱销毁，
+`--check` 也能从任意存活的播种目录恢复记录，完成验收。
 
 ## 不会用命令行？把这段话贴给你的 AI
 

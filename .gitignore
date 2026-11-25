@@ -1,0 +1,4 @@
+.nfs*
+dl_page/
+__pycache__/
+memory_diag_reports/
